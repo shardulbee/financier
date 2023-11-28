@@ -1,0 +1,90 @@
+#!/usr/bin/env ruby
+# typed: strict
+
+$LOAD_PATH.unshift(File.expand_path("../../lib", File.realpath(__FILE__)))
+
+require 'environment_configuration'
+require 'import/helpers'
+require 'ledger/parser'
+
+require 'cli/ui'
+require 'dotenv/load'
+require 'sorbet-runtime'
+CLI::UI::StdoutRouter.enable
+
+extend(T::Sig)
+
+sig {params(journal: Ledger::Journal, new_journal_entry: Ledger::JournalEntry).void}
+def process_transaction(journal, new_journal_entry)
+  CLI::UI::Frame.open("Processing journal entry:", color: :blue) do
+    CLI::UI::Frame.open("Current Journal Entry", color: :red) do
+      puts new_journal_entry
+    end
+
+    case CLI::UI.ask('What to do?', options: %w(categorize split skip))
+    when 'categorize'
+      account = CLI::UI.ask(
+        'What account?',
+        options: journal.accounts
+      )
+      new_journal_entry.categorize(account: account)
+    when 'split'
+      account = CLI::UI.ask(
+        'What account should the other half of the money go to?',
+        options: journal.accounts,
+      )
+      new_journal_entry.split_with_jacinthe(other_account: account)
+    when 'skip'
+      next
+    end
+
+    CLI::UI::Frame.open('New journal entry', color: :green) do
+      puts new_journal_entry.to_s
+    end
+
+    unless CLI::UI.confirm('Move on?')
+      exit(1)
+    end
+  end
+end
+
+config = EnvironmentConfiguration.get(ARGV[0])
+new_transactions = Import::Helpers.import_transactions(config)
+journal = Ledger::Parser.parse_dir(config.journal_dir)
+
+# raise "Journal is invalid! Run `hledger check` to understand why. Exiting." unless journal.valid?
+
+new_transactions.each do |new_transaction|
+  # TODO: side effect
+  new_journal_entry = journal.import_transaction(new_transaction)
+  next if new_journal_entry.nil?
+  next unless new_journal_entry.unprocessed?
+
+  process_transaction(journal, new_journal_entry)
+end
+
+Import::Helpers.import_ofx_balances(config.qfx_dir).each do |balance|
+  # TODO: side effect
+  journal.import_balance(balance)
+end
+
+if config.is_a?(EnvironmentConfiguration::Production) && journal.write(config.journal_dir)
+    journal.journal_entries.each(&:sync_with_external)
+
+    puts CLI::UI.fmt "{{v}} Wrote journal entries to #{config.journal_path}"
+
+    if CLI::UI.confirm('Delete files?')
+      Import::Helpers.delete_ofx_files(config.qfx_dir)
+    end
+
+    exit(0)
+elsif config.is_a?(EnvironmentConfiguration::Test)
+  CLI::UI::Frame.open("In testmode - printing journal:", color: :blue) do
+    puts journal.to_s
+  end
+
+  exit(0)
+else
+  puts CLI::UI.fmt "{{x}} Writing the journal failed."
+  exit(1)
+end

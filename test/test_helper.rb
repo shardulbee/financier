@@ -1,0 +1,78 @@
+# typed: false
+# frozen_string_literal: true
+
+require 'simplecov'
+
+SimpleCov.start do
+  enable_coverage :branch
+	primary_coverage :branch
+	add_filter "/test/"
+end
+
+require 'minitest/autorun'
+require 'minitest/focus'
+require 'mocha/minitest'
+require 'webmock/minitest'
+
+OFX_HEADER = <<~ofx
+OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:TYPE1
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+<SIGNONMSGSRSV1>
+<SONRS>
+<STATUS>
+<CODE>0
+<SEVERITY>INFO
+<MESSAGE>OK
+</STATUS>
+<DTSERVER>20210825140838[-5:EST]
+<USERKEY>--NoUserKey--
+<LANGUAGE>ENG
+<INTU.BID>00002
+</SONRS>
+</SIGNONMSGSRSV1>
+<BANKMSGSRSV1>
+<STMTTRNRS>
+<TRNUID>QWEB - 202108251408383071
+<STATUS>
+<CODE>0
+<SEVERITY>INFO
+<MESSAGE>OK
+</STATUS>
+<STMTRS>
+<CURDEF>CAD
+<BANKACCTFROM>
+<BANKID>300000100
+<ACCTID>XXXXXXX
+<ACCTTYPE>CHECKING
+</BANKACCTFROM>
+ofx
+
+OFX_FOOTER = <<~ofx
+<LEDGERBAL>
+<BALAMT>8005.28
+<DTASOF>20210820020000[-5:EST]
+</LEDGERBAL>
+<AVAILBAL>
+<BALAMT>8005.28
+<DTASOF>20210825020000[-5:EST]
+</AVAILBAL>
+</STMTRS>
+</STMTTRNRS>
+</BANKMSGSRSV1>
+</OFX>
+ofx
+
+class Minitest::Test
+	def write_ofx_transactions(ofx_string)
+		"#{OFX_HEADER}\n#{ofx_string}\n#{OFX_FOOTER}"
+	end
+end

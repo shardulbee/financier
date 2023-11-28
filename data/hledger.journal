@@ -1,0 +1,27 @@
+# vim:filetype=ledger
+
+2021-07-26 PREAUTHORIZED PAYMENT
+    Liabilities:InfiniteVisa  8714.35
+    Assets:Checking:TD  -8714.35 ; tid:XXXXXXX.21208050233910020
+
+2021-07-26 DEPANNEUR 7 JOU _M
+    Assets:Checking:TD  -5.25 ; tid:XXXXXXX.21206211949700010
+    Expenses:Discretionary:FoodAndDrink  5.25
+
+2021-07-30 MONTHLY ACCOUNT FEE
+    Assets:Checking:TD  -29.95 ; tid:XXXXXXX.21212051551940010
+    Expenses:Recurring  29.95
+
+2021-08-03 SEND E-TFR ***uu2
+    Assets:Reimbursements:Splitwise:Jacinthe  46.00
+    Expenses:Discretionary:FoodAndDrink  46.00
+    Assets:Checking:TD  -92.00 ; tid:XXXXXXX.21213200913790010
+
+2021-08-16 HBFC DON
+    Assets:Reimbursements:Splitwise:Jacinthe  25.00
+    Expenses:Discretionary:FoodAndDrink  25.00
+    Assets:Checking:TD  -50.00 ; tid:XXXXXXX.21228212404630010
+
+2021-08-20 JI053 TFR-FR 4020011
+    Assets:Checking:TD  5000.00 ; tid:XXXXXXX.21232110530730010
+    income:unknown  -5000.00
